@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <OpenCL/OpenCL.h>
+#include <OpenGL/gl.h>
 
 #define CL_CHK_ERR(err) do { if (err) { printf("Error %i in " __FILE__":%i\n", err, __LINE__); exit(1); } } while (0)
 #define CL_CHK_ERR_EXP(err, exp) do { if (err) { printf("Error %i when running "#exp"; in " __FILE__":%i\n", err, __LINE__); exit(1); } } while (0)
@@ -9,8 +10,43 @@
 
 using namespace std;
 
+struct BodyDescriptions
+{
+    cl_float*   mass;
+    cl_float3*  position;
+    cl_float3*  velocity;
+    
+    BodyDescriptions(int size)
+    {
+        mass = new cl_float[size];
+        position = new cl_float3[size];
+        velocity = new cl_float3[size];
+    }
+    
+    ~BodyDescriptions()
+    {
+        delete[] mass;
+        delete[] position;
+        delete[] velocity;
+    }
+
+private:
+    BodyDescriptions(const BodyDescriptions&);
+    BodyDescriptions& operator=(const BodyDescriptions&);
+};
+
+struct BodyDescription
+{
+    float mass;
+    float px, py, pz;
+    float vx, vy, vz;
+};
+
 NBodySimulation::NBodySimulation()
 {
+    m_BodyDescriptions = NULL;
+    m_VBO = 0;
+
     cl_platform_id  platform;
     CL_CHK(clGetPlatformIDs(1, &platform, NULL));
     CL_CHK(clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &m_Device, NULL));
@@ -21,7 +57,7 @@ NBodySimulation::NBodySimulation()
     CL_CHK_ERR(clErr);
     cout << "found device:" << m_Device << '\n';
     
-    initKernel("", "");
+    //initKernel("", "");
 }
 
 NBodySimulation::~NBodySimulation()
@@ -29,6 +65,7 @@ NBodySimulation::~NBodySimulation()
     clReleaseKernel(m_Kernel);
     clReleaseCommandQueue(m_CommandQueue);
     clReleaseContext(m_Context);
+    delete m_BodyDescriptions;
 }
 
 void NBodySimulation::initKernel(const char* path, const char* kernelName)
@@ -72,4 +109,28 @@ void NBodySimulation::simulate()
 {
     size_t workSize = 1;
     CL_CHK(clEnqueueNDRangeKernel(m_CommandQueue, m_Kernel, 1, NULL, &workSize, NULL, 0, NULL, NULL));
+}
+
+void NBodySimulation::loadSimulationDescription(const char* path, int maxBodies)
+{
+    ifstream descFile;
+    descFile.open(path);
+    if (!descFile.is_open())
+    {
+        cerr << "Unable to open simulation description at: " << path;
+        exit(1);
+    }
+    string line;
+    BodyDescription* descriptions = new BodyDescription[maxBodies];
+    int bodiesRead = 0;
+    while (getline(descFile, line) && bodiesRead < maxBodies)
+    {
+        BodyDescription& desc = descriptions[bodiesRead++];
+        sscanf(line.c_str(), "%f %f %f %f %f %f %f", &desc.mass, &desc.px, &desc.py, &desc.pz,
+               &desc.vx, &desc.vy, &desc.vz);
+    }
+    
+    glGenBuffers(1, &m_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(BodyDescription) * bodiesRead, descriptions, GL_STATIC_DRAW);
 }
