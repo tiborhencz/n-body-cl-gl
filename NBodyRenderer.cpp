@@ -9,7 +9,7 @@ NBodyRenderer::NBodyRenderer()
 {
     m_CameraPosition.x = -1.7;
     m_CameraPosition.y = 19;
-    m_CameraPosition.z = -15;
+    m_CameraPosition.z = -200;
 }
 
 void NBodyRenderer::draw() const

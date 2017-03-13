@@ -11,31 +11,6 @@
 
 using namespace std;
 
-struct BodyDescriptions
-{
-    cl_float*   mass;
-    cl_float3*  position;
-    cl_float3*  velocity;
-    
-    BodyDescriptions(int size)
-    {
-        mass = new cl_float[size];
-        position = new cl_float3[size];
-        velocity = new cl_float3[size];
-    }
-    
-    ~BodyDescriptions()
-    {
-        delete[] mass;
-        delete[] position;
-        delete[] velocity;
-    }
-
-private:
-    BodyDescriptions(const BodyDescriptions&);
-    BodyDescriptions& operator=(const BodyDescriptions&);
-};
-
 struct BodyDescription
 {
     float mass;
@@ -64,9 +39,17 @@ NBodySimulation::NBodySimulation()
     CL_CHK_ERR(clErr);
     m_CommandQueue = clCreateCommandQueue(m_Context, m_Device, 0, &clErr);
     CL_CHK_ERR(clErr);
-    cout << "found device:" << m_Device << '\n';
-    
     initKernel("kernel.cl", "calculate_forces");
+
+    glGenBuffers(1, &m_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(3, GL_FLOAT, sizeof(BodyDescription), (void*)4);
+
+    cl_int err;
+    m_CLBuffer = clCreateFromGLBuffer(m_Context, CL_MEM_READ_WRITE, m_VBO, &err);
+    clSetKernelArg(m_Kernel, 0, sizeof(cl_mem), &m_CLBuffer);
+    CL_CHK_ERR(err);
 }
 
 NBodySimulation::~NBodySimulation()
@@ -74,38 +57,27 @@ NBodySimulation::~NBodySimulation()
     clReleaseKernel(m_Kernel);
     clReleaseCommandQueue(m_CommandQueue);
     clReleaseContext(m_Context);
-    delete m_BodyDescriptions;
-    if (m_VBO)
-    {
-        glDeleteBuffers(1, &m_VBO);
-    }
-    if (m_CLBuffer)
-    {
-        clReleaseMemObject(m_CLBuffer);
-    }
+    glDeleteBuffers(1, &m_VBO);
+    clReleaseMemObject(m_CLBuffer);
 }
 
 void NBodySimulation::initKernel(const char* path, const char* kernelName)
 {
     ifstream kernelFile;
-    size_t size;
     kernelFile.open(path);
     if (!kernelFile.is_open())
     {
         cerr << "Unable to open kernel at: " << path;
         exit(1);
     }
-    kernelFile.seekg(0, ios::end);
-    size = kernelFile.tellg();
-    kernelFile.seekg(0, ios::beg);
-    char* kernelText = new char[size];
-    kernelFile.read(kernelText, size);
-    kernelFile.close();
+    string kernelText((istreambuf_iterator<char>(kernelFile)),
+                         istreambuf_iterator<char>());
+    size_t size = kernelText.length();
+    const char* source = kernelText.c_str();
 
     cl_int clErr;
-    cl_program program = clCreateProgramWithSource(m_Context, 1, (const char**)&kernelText, &size, &clErr);
+    cl_program program = clCreateProgramWithSource(m_Context, 1, &source, &size, &clErr);
     CL_CHK_ERR(clErr);
-    delete[] kernelText;
     
     clErr = clBuildProgram(program, 1, &m_Device, NULL, NULL, NULL);
     if (clErr != CL_SUCCESS)
@@ -122,16 +94,13 @@ void NBodySimulation::initKernel(const char* path, const char* kernelName)
     clReleaseProgram(program);
 }
 
-void NBodySimulation::simulate()
+void NBodySimulation::simulate(float time)
 {
-    glFlush();
-    glFinish();
+    clSetKernelArg(m_Kernel, 2, sizeof(float), &time);
     CL_CHK(clEnqueueAcquireGLObjects(m_CommandQueue, 1, &m_CLBuffer, 0, NULL, NULL));
     size_t workSize = m_BodyCount;
     CL_CHK(clEnqueueNDRangeKernel(m_CommandQueue, m_Kernel, 1, NULL, &workSize, NULL, 0, NULL, NULL));
     CL_CHK(clEnqueueReleaseGLObjects(m_CommandQueue, 1, &m_CLBuffer, 0, NULL, NULL));
-    clFlush(m_CommandQueue);
-    clFinish(m_CommandQueue);
 }
 
 void NBodySimulation::loadSimulationDescription(const char* path, int maxBodies)
@@ -152,23 +121,8 @@ void NBodySimulation::loadSimulationDescription(const char* path, int maxBodies)
         sscanf(line.c_str(), "%f %f %f %f %f %f %f", &desc.mass, &desc.px, &desc.py, &desc.pz,
                &desc.vx, &desc.vy, &desc.vz);
     }
-
-    if (m_VBO)
-    {
-        glDeleteBuffers(1, &m_VBO);
-    }
-    glGenBuffers(1, &m_VBO);
+    clSetKernelArg(m_Kernel, 1, sizeof(int), &m_BodyCount);
     glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(BodyDescription) * m_BodyCount, descriptions, GL_DYNAMIC_DRAW);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(3, GL_FLOAT, sizeof(BodyDescription), (void*)4);
-
-    if (m_CLBuffer)
-    {
-        clReleaseMemObject(m_CLBuffer);
-    }
-    cl_int err;
-    m_CLBuffer = clCreateFromGLBuffer(m_Context, CL_MEM_READ_WRITE, m_VBO, &err);
-    clSetKernelArg(m_Kernel, 0, sizeof(cl_mem), &m_CLBuffer);
-    CL_CHK_ERR(err);
+    delete[] descriptions;
 }

@@ -8,7 +8,7 @@ class NBodySimulation
 public:
     NBodySimulation();
     ~NBodySimulation();
-    void    simulate();
+    void    simulate(float time);
     void    loadSimulationDescription(const char* path, int maxBodies);
     GLuint  getVBO() const { return m_VBO; }
     int     getBodyCount() const { return m_BodyCount; }

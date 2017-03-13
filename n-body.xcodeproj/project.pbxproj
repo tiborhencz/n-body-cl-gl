@@ -15,6 +15,7 @@
 		465606671E743D930012CE16 /* libglfw.3.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 465606661E743D930012CE16 /* libglfw.3.2.dylib */; };
 		4656067A1E768CC50012CE16 /* kernel.cl in Sources */ = {isa = PBXBuildFile; fileRef = 465606791E768CC50012CE16 /* kernel.cl */; };
 		4656067B1E7690DD0012CE16 /* kernel.cl in CopyFiles */ = {isa = PBXBuildFile; fileRef = 465606791E768CC50012CE16 /* kernel.cl */; };
+		4656068E1E7710D20012CE16 /* dubinski.tab in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4656068D1E7710CF0012CE16 /* dubinski.tab */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -24,6 +25,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 16;
 			files = (
+				4656068E1E7710D20012CE16 /* dubinski.tab in CopyFiles */,
 				4656067B1E7690DD0012CE16 /* kernel.cl in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -38,10 +40,10 @@
 		462B95E91E740E30006DB972 /* NBodySimulation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NBodySimulation.h; sourceTree = "<group>"; };
 		462B95FB1E742079006DB972 /* NBodyRenderer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NBodyRenderer.cpp; sourceTree = "<group>"; };
 		462B95FC1E742079006DB972 /* NBodyRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NBodyRenderer.h; sourceTree = "<group>"; };
-		462B95FE1E7421C8006DB972 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
 		462B96001E7421CD006DB972 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		465606661E743D930012CE16 /* libglfw.3.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.2.dylib; path = ../../../usr/local/Cellar/glfw/3.2.1/lib/libglfw.3.2.dylib; sourceTree = "<group>"; };
 		465606791E768CC50012CE16 /* kernel.cl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.opencl; path = kernel.cl; sourceTree = "<group>"; };
+		4656068D1E7710CF0012CE16 /* dubinski.tab */ = {isa = PBXFileReference; lastKnownFileType = text; path = dubinski.tab; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -67,6 +69,7 @@
 				462B95E91E740E30006DB972 /* NBodySimulation.h */,
 				462B95E21E7409A1006DB972 /* NBodySimulation.cpp */,
 				462B95E71E740E0E006DB972 /* main.cpp */,
+				4656068D1E7710CF0012CE16 /* dubinski.tab */,
 				462B95D91E740967006DB972 /* Products */,
 				462B95E41E740DA8006DB972 /* Frameworks */,
 			);
@@ -85,7 +88,6 @@
 			children = (
 				465606661E743D930012CE16 /* libglfw.3.2.dylib */,
 				462B96001E7421CD006DB972 /* OpenGL.framework */,
-				462B95FE1E7421C8006DB972 /* GLUT.framework */,
 				462B95E51E740DA8006DB972 /* OpenCL.framework */,
 			);
 			name = Frameworks;
