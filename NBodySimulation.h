@@ -8,8 +8,10 @@ class NBodySimulation
 public:
     NBodySimulation();
     ~NBodySimulation();
-    void simulate();
-    void loadSimulationDescription(const char* path, int maxBodies);
+    void    simulate();
+    void    loadSimulationDescription(const char* path, int maxBodies);
+    GLuint  getVBO() const { return m_VBO; }
+    int     getBodyCount() const { return m_BodyCount; }
     
 private:
     void initKernel(const char* path, const char* kernelName);
@@ -21,4 +23,6 @@ private:
     cl_command_queue    m_CommandQueue;
     BodyDescriptions*   m_BodyDescriptions;
     GLuint              m_VBO;
+    cl_mem              m_CLBuffer;
+    int                 m_BodyCount;
 };

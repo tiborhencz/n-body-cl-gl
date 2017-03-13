@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <OpenCL/OpenCL.h>
+#include <OpenGL/OpenGL.h>
 #include <OpenGL/gl.h>
 
 #define CL_CHK_ERR(err) do { if (err) { printf("Error %i in " __FILE__":%i\n", err, __LINE__); exit(1); } } while (0)
@@ -46,18 +47,26 @@ NBodySimulation::NBodySimulation()
 {
     m_BodyDescriptions = NULL;
     m_VBO = 0;
+    m_CLBuffer = 0;
 
     cl_platform_id  platform;
     CL_CHK(clGetPlatformIDs(1, &platform, NULL));
     CL_CHK(clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &m_Device, NULL));
     cl_int clErr;
-    m_Context = clCreateContext(NULL, 1, &m_Device, NULL, NULL, &clErr);
+    CGLContextObj kCGLContext = CGLGetCurrentContext();
+    CGLShareGroupObj kCGLShareGroup = CGLGetShareGroup(kCGLContext);
+    cl_context_properties props[] =
+    {
+        CL_CONTEXT_PROPERTY_USE_CGL_SHAREGROUP_APPLE, (cl_context_properties)kCGLShareGroup,
+        0
+    };
+    m_Context = clCreateContext(props, 1, &m_Device, NULL, NULL, &clErr);
     CL_CHK_ERR(clErr);
     m_CommandQueue = clCreateCommandQueue(m_Context, m_Device, 0, &clErr);
     CL_CHK_ERR(clErr);
     cout << "found device:" << m_Device << '\n';
     
-    //initKernel("", "");
+    initKernel("kernel.cl", "calculate_forces");
 }
 
 NBodySimulation::~NBodySimulation()
@@ -66,6 +75,14 @@ NBodySimulation::~NBodySimulation()
     clReleaseCommandQueue(m_CommandQueue);
     clReleaseContext(m_Context);
     delete m_BodyDescriptions;
+    if (m_VBO)
+    {
+        glDeleteBuffers(1, &m_VBO);
+    }
+    if (m_CLBuffer)
+    {
+        clReleaseMemObject(m_CLBuffer);
+    }
 }
 
 void NBodySimulation::initKernel(const char* path, const char* kernelName)
@@ -107,8 +124,14 @@ void NBodySimulation::initKernel(const char* path, const char* kernelName)
 
 void NBodySimulation::simulate()
 {
-    size_t workSize = 1;
+    glFlush();
+    glFinish();
+    CL_CHK(clEnqueueAcquireGLObjects(m_CommandQueue, 1, &m_CLBuffer, 0, NULL, NULL));
+    size_t workSize = m_BodyCount;
     CL_CHK(clEnqueueNDRangeKernel(m_CommandQueue, m_Kernel, 1, NULL, &workSize, NULL, 0, NULL, NULL));
+    CL_CHK(clEnqueueReleaseGLObjects(m_CommandQueue, 1, &m_CLBuffer, 0, NULL, NULL));
+    clFlush(m_CommandQueue);
+    clFinish(m_CommandQueue);
 }
 
 void NBodySimulation::loadSimulationDescription(const char* path, int maxBodies)
@@ -122,15 +145,30 @@ void NBodySimulation::loadSimulationDescription(const char* path, int maxBodies)
     }
     string line;
     BodyDescription* descriptions = new BodyDescription[maxBodies];
-    int bodiesRead = 0;
-    while (getline(descFile, line) && bodiesRead < maxBodies)
+    m_BodyCount = 0;
+    while (getline(descFile, line) && m_BodyCount < maxBodies)
     {
-        BodyDescription& desc = descriptions[bodiesRead++];
+        BodyDescription& desc = descriptions[m_BodyCount++];
         sscanf(line.c_str(), "%f %f %f %f %f %f %f", &desc.mass, &desc.px, &desc.py, &desc.pz,
                &desc.vx, &desc.vy, &desc.vz);
     }
-    
+
+    if (m_VBO)
+    {
+        glDeleteBuffers(1, &m_VBO);
+    }
     glGenBuffers(1, &m_VBO);
     glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(BodyDescription) * bodiesRead, descriptions, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(BodyDescription) * m_BodyCount, descriptions, GL_DYNAMIC_DRAW);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(3, GL_FLOAT, sizeof(BodyDescription), (void*)4);
+
+    if (m_CLBuffer)
+    {
+        clReleaseMemObject(m_CLBuffer);
+    }
+    cl_int err;
+    m_CLBuffer = clCreateFromGLBuffer(m_Context, CL_MEM_READ_WRITE, m_VBO, &err);
+    clSetKernelArg(m_Kernel, 0, sizeof(cl_mem), &m_CLBuffer);
+    CL_CHK_ERR(err);
 }

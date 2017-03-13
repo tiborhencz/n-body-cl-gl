@@ -9,21 +9,24 @@
 /* Begin PBXBuildFile section */
 		462B95E31E7409A1006DB972 /* NBodySimulation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 462B95E21E7409A1006DB972 /* NBodySimulation.cpp */; };
 		462B95E61E740DA8006DB972 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 462B95E51E740DA8006DB972 /* OpenCL.framework */; };
-		462B95E81E740E0E006DB972 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 462B95E71E740E0E006DB972 /* main.cpp */; };
+		462B95E81E740E0E006DB972 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 462B95E71E740E0E006DB972 /* main.cpp */; settings = {COMPILER_FLAGS = "-Wno-documentation"; }; };
 		462B95FD1E742079006DB972 /* NBodyRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 462B95FB1E742079006DB972 /* NBodyRenderer.cpp */; };
 		462B96011E7421CD006DB972 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 462B96001E7421CD006DB972 /* OpenGL.framework */; };
 		465606671E743D930012CE16 /* libglfw.3.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 465606661E743D930012CE16 /* libglfw.3.2.dylib */; };
+		4656067A1E768CC50012CE16 /* kernel.cl in Sources */ = {isa = PBXBuildFile; fileRef = 465606791E768CC50012CE16 /* kernel.cl */; };
+		4656067B1E7690DD0012CE16 /* kernel.cl in CopyFiles */ = {isa = PBXBuildFile; fileRef = 465606791E768CC50012CE16 /* kernel.cl */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		462B95D61E740967006DB972 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
+			buildActionMask = 12;
+			dstPath = "";
+			dstSubfolderSpec = 16;
 			files = (
+				4656067B1E7690DD0012CE16 /* kernel.cl in CopyFiles */,
 			);
-			runOnlyForDeploymentPostprocessing = 1;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
@@ -38,6 +41,7 @@
 		462B95FE1E7421C8006DB972 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
 		462B96001E7421CD006DB972 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		465606661E743D930012CE16 /* libglfw.3.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.2.dylib; path = ../../../usr/local/Cellar/glfw/3.2.1/lib/libglfw.3.2.dylib; sourceTree = "<group>"; };
+		465606791E768CC50012CE16 /* kernel.cl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.opencl; path = kernel.cl; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,6 +61,7 @@
 		462B95CF1E740967006DB972 = {
 			isa = PBXGroup;
 			children = (
+				465606791E768CC50012CE16 /* kernel.cl */,
 				462B95FC1E742079006DB972 /* NBodyRenderer.h */,
 				462B95FB1E742079006DB972 /* NBodyRenderer.cpp */,
 				462B95E91E740E30006DB972 /* NBodySimulation.h */,
@@ -147,6 +152,7 @@
 				462B95E81E740E0E006DB972 /* main.cpp in Sources */,
 				462B95E31E7409A1006DB972 /* NBodySimulation.cpp in Sources */,
 				462B95FD1E742079006DB972 /* NBodyRenderer.cpp in Sources */,
+				4656067A1E768CC50012CE16 /* kernel.cl in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
